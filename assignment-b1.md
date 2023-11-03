@@ -1,0 +1,175 @@
+STAT 545B Assignment 1
+================
+
+Ruichen Yao
+
+84951482
+
+# Exercise 1: Make a Function / Exercise 2: Document your Function
+
+## Setup
+
+Begin by loading data and the tidyverse package below:
+
+``` r
+library(datateachr) # <- might contain the data you picked!
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(testthat)
+```
+
+In previous projects, I often used the year_since_built variable to
+analyze problems, but there is only the year_built variable in
+apt_buildings. As time goes by, we need to frequently modify this
+variable year_since_built, so I wrote a function to directly add a
+variable and only modify the input every year.
+
+``` r
+#' Add new variable year_since_built in apt_buildings dataset
+#' 
+#' @details
+#' Add new variable year_since_built to apt_buildings dataset. It can also be edited when the new year comes. For example, just run the function again when the year 2024 arrives and replace the input with 2024.
+#' 
+#' @param this_year a number. This should be the number of the current AD year, for example 2023.
+
+#' @return a selected dataset that only contains year_built and year_since_built in the apt_buildings for visual.
+
+
+add_year_since_built <- function(this_year) {
+  # Check if the input_year is a numeric value
+  if (!is.numeric(this_year)) {
+    stop("Error: Input year must be a numeric value.")
+  }
+  
+  # Check if the input is an integer
+  if (!all(as.integer(this_year) == this_year)) {
+    stop("Error: Input year must be an integer.")
+  }
+
+  # Calculate the year_since_built variable
+  apt_buildings$year_since_built <- this_year - apt_buildings$year_built
+  
+  # Check if year_since_built has been added to the dataset
+  if (!("year_since_built" %in% names(apt_buildings))) {
+    stop("Error: 'year_since_built' variable was not successfully added to the dataset.")
+  }
+
+  return(apt_buildings[, c("year_built", "year_since_built"), drop = FALSE])
+}
+
+add_year_since_built
+```
+
+    ## function(this_year) {
+    ##   # Check if the input_year is a numeric value
+    ##   if (!is.numeric(this_year)) {
+    ##     stop("Error: Input year must be a numeric value.")
+    ##   }
+    ##   
+    ##   # Check if the input is an integer
+    ##   if (!all(as.integer(this_year) == this_year)) {
+    ##     stop("Error: Input year must be an integer.")
+    ##   }
+    ## 
+    ##   # Calculate the year_since_built variable
+    ##   apt_buildings$year_since_built <- this_year - apt_buildings$year_built
+    ##   
+    ##   # Check if year_since_built has been added to the dataset
+    ##   if (!("year_since_built" %in% names(apt_buildings))) {
+    ##     stop("Error: 'year_since_built' variable was not successfully added to the dataset.")
+    ##   }
+    ## 
+    ##   return(apt_buildings[, c("year_built", "year_since_built"), drop = FALSE])
+    ## }
+
+# Exercise 3: Include examples
+
+## Example 1: this year = 2023
+
+``` r
+Example1 <- add_year_since_built(2023)
+Example1
+```
+
+    ## # A tibble: 3,455 × 2
+    ##    year_built year_since_built
+    ##         <dbl>            <dbl>
+    ##  1       1967               56
+    ##  2       1970               53
+    ##  3       1927               96
+    ##  4       1959               64
+    ##  5       1943               80
+    ##  6       1952               71
+    ##  7       1959               64
+    ##  8       1971               52
+    ##  9       1969               54
+    ## 10       1972               51
+    ## # ℹ 3,445 more rows
+
+## Example 2: The new year is coming. this year = 2024
+
+``` r
+Example2 <- add_year_since_built(2024)
+Example2
+```
+
+    ## # A tibble: 3,455 × 2
+    ##    year_built year_since_built
+    ##         <dbl>            <dbl>
+    ##  1       1967               57
+    ##  2       1970               54
+    ##  3       1927               97
+    ##  4       1959               65
+    ##  5       1943               81
+    ##  6       1952               72
+    ##  7       1959               65
+    ##  8       1971               53
+    ##  9       1969               55
+    ## 10       1972               52
+    ## # ℹ 3,445 more rows
+
+## Example 3: Error case. Enter a string not number
+
+``` r
+Example3 <- add_year_since_built("newyear")
+```
+
+    ## Error in add_year_since_built("newyear"): Error: Input year must be a numeric value.
+
+``` r
+stop("This is a deliberate error for demonstration purposes.")
+```
+
+    ## Error in eval(expr, envir, enclos): This is a deliberate error for demonstration purposes.
+
+# Exercise 4: Test the Function
+
+``` r
+# Define a test context
+test_that("add_year_since_built function tests", {
+  # Test 1: Valid numeric input
+  this_year_2023 <- 2023
+  test1 <- add_year_since_built(this_year_2023)
+  expect_true(is.numeric(test1$year_since_built))
+  expect_equal(nrow(test1), nrow(apt_buildings))
+  
+  # Test 2: Numeric input with NAs
+  this_year_empty <- NA
+  expect_error(add_year_since_built(this_year_empty), "Error: Input year must be a numeric value.")
+  
+  # Test 3: Vector of a different type (if relevant)
+  this_year_decimal <- 2023.5
+  expect_error(add_year_since_built(this_year_decimal), "Error: Input year must be an integer.")
+  
+  # Test 4: Redundant input (providing a different number)
+  this_year_2024 <- 2024
+  test4 <- add_year_since_built(this_year_2024)
+  expect_true(is.numeric(test4$year_since_built))
+  expect_true(all(as.integer(this_year_2024) == this_year_2024))  # Check if the input is an integer
+  expect_equal(nrow(test4), nrow(apt_buildings))
+  
+})
+```
+
+    ## Test passed 🥳
